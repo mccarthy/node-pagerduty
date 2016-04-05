@@ -3,8 +3,10 @@ request = require 'request'
 class PagerDuty
   module.exports = PagerDuty
 
-  constructor: ({@serviceKey}) ->
+  constructor: ({@serviceKey, @subdomain, @apiToken}) ->
     throw new Error 'PagerDuty.constructor: Need serviceKey!' unless @serviceKey?
+    throw new Error 'PagerDuty.constructor: Need subdomain!' unless @subdomain?
+    throw new Error 'PagerDuty.constructor: Need apiToken!' unless @apiToken?
 
   create: ({description, incidentKey, details, callback}) ->
     throw new Error 'PagerDuty.create: Need description!' unless description?
@@ -21,30 +23,37 @@ class PagerDuty
 
     @_request arguments[0] extends eventType: 'resolve'
 
+  getIncident: ({incidentKey}) ->
+    throw new Error 'PagerDuty.resolve: Need incidentKey!' unless incidentKey?
+
+    @_request arguments[0] extends eventType: 'get'
+
   _request: ({description, incidentKey, eventType, details, callback}) ->
     throw new Error 'PagerDuty._request: Need eventType!' unless eventType?
-
+    json = {}
+    uri = 'https://events.pagerduty.com/generic/2010-04-15/create_event.json'
+    method = 'POST'
     incidentKey ||= null
     details     ||= {}
     callback    ||= ->
 
-    json =
-      service_key: @serviceKey
-      event_type: eventType
-      description: description
-      details: details
-
-    json.incident_key = incidentKey if incidentKey?
+    if eventType == 'get'
+      json.token = @apiToken
+      uri = "https://#{@subdomain}.pagerduty.com/api/v1/incidents/#{incidentKey}"
+      method = 'GET'
+    else
+      json.service_key = @serviceKey
+      json.event_type = eventType
+      json.description = description
+      json.details = details
+      json.incident_key = incidentKey if incidentKey?
 
     request
-      method: 'POST'
-      uri: 'https://events.pagerduty.com/generic/2010-04-15/create_event.json'
+      method: method
+      uri: uri
       json: json
     , (err, response, body) ->
       if err or response.statusCode != 200
         callback err || new Error(body.errors[0])
       else
         callback null, body
-
-
-
