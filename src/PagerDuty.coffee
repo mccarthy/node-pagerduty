@@ -31,6 +31,7 @@ class PagerDuty
   _request: ({description, incidentKey, eventType, details, callback}) ->
     throw new Error 'PagerDuty._request: Need eventType!' unless eventType?
     json = {}
+    headers = {}
     uri = 'https://events.pagerduty.com/generic/2010-04-15/create_event.json'
     method = 'POST'
     incidentKey ||= null
@@ -39,8 +40,10 @@ class PagerDuty
 
     if eventType == 'get'
       json.token = @apiToken
-      uri = "https://#{@subdomain}.pagerduty.com/api/v1/incidents/#{incidentKey}"
+      uri = "https://#{@subdomain}.pagerduty.com/api/v1/incidents/"
+      json.incident_key = incidentKey;
       method = 'GET'
+      headers.Authorization = "Token token=#{@apiToken}"
     else
       json.service_key = @serviceKey
       json.event_type = eventType
@@ -52,6 +55,7 @@ class PagerDuty
       method: method
       uri: uri
       json: json
+      headers: headers
     , (err, response, body) ->
       if err or response.statusCode != 200
         callback err || new Error(body.errors[0])
