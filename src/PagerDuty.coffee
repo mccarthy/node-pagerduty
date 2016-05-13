@@ -23,12 +23,12 @@ class PagerDuty
 
     @_request arguments[0] extends eventType: 'resolve'
 
-  getIncident: ({incidentKey}) ->
+  getIncident: ({incidentKey, status}) ->
     throw new Error 'PagerDuty.resolve: Need incidentKey!' unless incidentKey?
 
     @_request arguments[0] extends eventType: 'get'
 
-  _request: ({description, incidentKey, eventType, details, callback}) ->
+  _request: ({description, incidentKey, eventType, details, status, callback}) ->
     throw new Error 'PagerDuty._request: Need eventType!' unless eventType?
     json = {}
     headers = {}
@@ -37,11 +37,13 @@ class PagerDuty
     incidentKey ||= null
     details     ||= {}
     callback    ||= ->
+    status      ||= null
 
     if eventType == 'get'
       json.token = @apiToken
       uri = "https://#{@subdomain}.pagerduty.com/api/v1/incidents/"
       json.incident_key = incidentKey;
+      json.status = status if status;
       method = 'GET'
       headers.Authorization = "Token token=#{@apiToken}"
     else
