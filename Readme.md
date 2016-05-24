@@ -40,7 +40,7 @@ npm install pagerduty
 
 ### getIncident(options)
   * Required
-    *`incidentKey` - Incident key to retrieve incidents for.
+    * `incidentKey` - Incident key to retrieve incidents for.
   * Optional
     * `status` - Filters incidents returned by status, for example 'triggered,acknowledged' will retrieve open incidents.
 
