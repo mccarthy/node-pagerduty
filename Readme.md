@@ -38,6 +38,12 @@ npm install pagerduty
     * `description` - Text that will appear in the incident’s log associated with this event.
     * `callback` - A Callback with two arguments `(err, response)`
 
+### getIncident(options)
+  * Required
+    * `incidentKey` - Incident key to retrieve incidents for.
+  * Optional
+    * `status` - Filters incidents returned by status, for example 'triggered,acknowledged' will retrieve open incidents.
+
 ### Example response
 
 ```json
@@ -56,7 +62,9 @@ var pager, PagerDuty;
 PagerDuty = require('pagerduty');
 
 pager = new PagerDuty({
-  serviceKey: '12345678901234567890123456789012' // required
+  serviceKey: '12345678901234567890123456789012',
+  subdomain: 'your-subdomain-here',
+  apiToken: 'your-api-token-here'
 });
 
 pager.create({
@@ -66,9 +74,9 @@ pager.create({
   },
   callback: function(err, response) {
     if (err) throw err;
-
+    var incidentKey = response.incident_key;
     pager.acknowledge({
-      incidentKey: response.incident_key, // required
+      incidentKey: incidentKey, // required
       description: 'Got the test error!',
       details: {
         foo: 'bar'
@@ -76,14 +84,22 @@ pager.create({
       callback: function(err, response) {
         if (err) throw err;
 
-        pager.resolve({
-          incidentKey: response.incident_key, // required
-          description: 'Resolved the test error!',
-          details: {
-            foo: 'bar'
-          },
-          callback: function(err, response) {
-            if (err) throw err;
+        pager.getIncident({incidentKey: incidentKey,
+            status: 'triggered,acknowledged',
+            callback: function(err, response) {
+              if (err) throw err;
+              console.log(response);
+
+              pager.resolve({
+              incidentKey: incidentKey, // required
+              description: 'Resolved the test error!',
+              details: {
+                foo: 'bar'
+              },
+              callback: function(err, response) {
+                if (err) throw err;
+              }
+            });
           }
         });
       }
